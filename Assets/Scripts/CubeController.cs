@@ -7,6 +7,8 @@ public class CubeController : MonoBehaviour
     public int myX, myY;
     GameController myGameController;
     public bool active = false;
+    public bool nextCube = false;
+
 
     // Start is called before the first frame update
     void Start()
@@ -21,9 +23,10 @@ public class CubeController : MonoBehaviour
     }
     void OnMouseDown()
     {
-
-        myGameController.ProcessClick(gameObject, myX, myY, gameObject.GetComponent<Renderer>().material.color, active);
-
+        if (!nextCube)
+        {
+            myGameController.ProcessClick(gameObject, myX, myY, gameObject.GetComponent<Renderer>().material.color, active);
+        }
     }
 
 
