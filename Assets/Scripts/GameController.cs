@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
@@ -10,11 +11,14 @@ public class GameController : MonoBehaviour
 
     int score = 0;
     int turns = 0;
-    float turnLength = 2;
+    float turnLength = 3;
     float gameTimeRunner = 60;
 
-    GameObject activeCube = null;
     public GameObject cubePrefab;
+    public Text scoreText;
+    public Text nextCubeText;
+
+    GameObject activeCube = null;
     GameObject[,] grid;
     GameObject nextCube;
     Color[] myColors = { Color.blue, Color.red, Color.green, Color.yellow, Color.magenta };
@@ -25,9 +29,10 @@ public class GameController : MonoBehaviour
 
     // have these here so we can change them later if we need to
     // rather than define them right away inside code
-    int rainbowPoints = 10;
-    int sameColorPoints = 5;
+    int rainbowPoints = 5;
+    int sameColorPoints = 10;
 
+    bool gameOver = false;
 
 
     // Start is called before the first frame update
@@ -67,18 +72,35 @@ public class GameController : MonoBehaviour
     // method that will show what happens when the game reaches its end
     // based on time, no available cubes/rows by either pressing or not pressing
     // keyboard 1-5
-    void EndGame(bool victory)
+    void EndGame(bool win)
     {
-        if (victory)
+        // because i named it Victory Scene in my code and Win Scene in unity it didnt load
+        // i had to go back and double check everything
+        if (win)
         {
-            print("You're Victorious!");
-
+            nextCubeText.text = "You Win!";
+            
         }
         else
         {
-            print("You Lose. Keep Trying!");
+
+            nextCubeText.text = "You Lose. Try Again!";
+
+        }
+        //this is just in case timing is such that next cube still exists
+        Destroy(nextCube);
+        nextCube = null;
+
+        // here we disable all of the cubes
+        for(int x = 0; x < gridX; x++)
+        {
+            for (int y = 0; y < gridY; y++)
+            {
+                grid[x, y].GetComponent<CubeController>().nextCube = true;
+            }
         }
 
+        gameOver = true;
     }
 
     GameObject ChooseWhiteCube(List<GameObject> whiteCubes)
@@ -88,11 +110,11 @@ public class GameController : MonoBehaviour
             return null;
         }
         return whiteCubes[Random.Range(0, whiteCubes.Count)];
-
+        
     }
 
     // new method that will return a game object
-    // which is there an available cube/row
+    // checking if there is an available cube in the row
     GameObject LocateAvailableCube (int y)
     {
         List<GameObject> whiteCubes = new List<GameObject> ();
@@ -154,7 +176,7 @@ public class GameController : MonoBehaviour
 
         SetCubeColor(whiteCube, nextCube.GetComponent<Renderer>().material.color);
     }
-
+    
     void AddBlackCube()
     {
         GameObject whiteCube = LocateAvailableCube();
@@ -170,7 +192,7 @@ public class GameController : MonoBehaviour
         int keyNumPressed = 0;
 
 
-        // here we write an if statement about 'if the player presses 1-5 and there's still a nextcube
+        // here we write an if statement about 'if the player presses 1-5 and there's still a nextcube at the top
         // it is not pretty but this checks each one
         if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
         {
@@ -260,10 +282,10 @@ public class GameController : MonoBehaviour
     {
         // gets convoluted because of how many colors there are
         Color a = grid[x, y].GetComponent<Renderer>().material.color;
-        Color b = grid[x, y].GetComponent<Renderer>().material.color;
-        Color c = grid[x, y].GetComponent<Renderer>().material.color;
-        Color d = grid[x, y].GetComponent<Renderer>().material.color;
-        Color e = grid[x, y].GetComponent<Renderer>().material.color;
+        Color b = grid[x + 1, y].GetComponent<Renderer>().material.color;
+        Color c = grid[x - 1, y].GetComponent<Renderer>().material.color;
+        Color d = grid[x, y + 1].GetComponent<Renderer>().material.color;
+        Color e = grid[x, y - 1].GetComponent<Renderer>().material.color;
         
         // if any of the colors are either white or black , then there's no rainbow plus
         if(a == Color.white || a == Color.black ||
@@ -332,7 +354,7 @@ public class GameController : MonoBehaviour
             //deactive it here
             activeCube.transform.localScale /= 1.5f;
             activeCube.GetComponent<CubeController>().active = false;
-
+            activeCube = null;
 
         }
 
@@ -365,37 +387,49 @@ public class GameController : MonoBehaviour
                     MakeBlackPlus(x, y);
 
                 }
-
-
             }
-
         }
-
-
-
-
     }
-
-
 
     // Update is called once per frame
     void Update()
     {
-        ProcessKeyInput();
-        Score();
-
-        if(Time.time > turnLength * turns)
+        if (Time.time < gameTimeRunner)
         {
-            turns++;
 
-            if (nextCube != null)
+            ProcessKeyInput();
+            Score();
+
+            if (Time.time > turnLength * turns)
             {
-                score -= 1;
-                AddBlackCube();
+                turns++;
 
+                if (nextCube != null)
+                {
+                    score -= 1;
+                    // we are ensuring it does not go negative
+                    if (score < 0)
+                    {
+                        score = 0;
+                    }
+                    AddBlackCube();
+                }
+                CreateNextCube();
             }
 
-            CreateNextCube();
+            scoreText.text = "Score: " + score;
         }
+        else if(!gameOver)
+        {
+            if(score > 0)
+            {
+                EndGame(true);
+            }
+            else
+            {
+                EndGame(false);
+            }
+        }
+
     }
 }
