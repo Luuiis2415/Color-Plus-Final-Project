@@ -39,15 +39,17 @@ public class GameController : MonoBehaviour
     void Start()
     {
         CreateGrid();
-
+        
     }
 
 
     void CreateGrid()
     {
-
+        // use the name of the array and create a new game object array
+        // based on the values we assigned to gridX and gridY
         grid = new GameObject[gridX, gridY];
 
+        //use the for loop to create the grid
         for (int y = 0; y < gridY; y++)
         {
             for (int x = 0; x < gridX; x++)
@@ -91,7 +93,8 @@ public class GameController : MonoBehaviour
         Destroy(nextCube);
         nextCube = null;
 
-        // here we disable all of the cubes
+        // here we disable all of the cubes in order to prevent the player from
+        //being able to move them once the game ends
         for(int x = 0; x < gridX; x++)
         {
             for (int y = 0; y < gridY; y++)
@@ -105,6 +108,7 @@ public class GameController : MonoBehaviour
 
     GameObject ChooseWhiteCube(List<GameObject> whiteCubes)
     {
+
         if(whiteCubes.Count == 0)
         {
             return null;
@@ -117,9 +121,10 @@ public class GameController : MonoBehaviour
     // checking if there is an available cube in the row
     GameObject LocateAvailableCube (int y)
     {
+        
         List<GameObject> whiteCubes = new List<GameObject> ();
 
-
+        //for loop to check if there are any available white cubes in row x
         for(int x = 0; x < gridX; x++)
         {
             if(grid[x,y].GetComponent<Renderer>().material.color == Color.white)
@@ -127,6 +132,7 @@ public class GameController : MonoBehaviour
                 whiteCubes.Add(grid[x,y]);
             }
         }
+        
         return ChooseWhiteCube(whiteCubes);
 
 
@@ -154,12 +160,15 @@ public class GameController : MonoBehaviour
     // in this method we SetCubeColor but it does more than that, be careful!
     void SetCubeColor (GameObject myCube, Color color)
     {
+        // if statement checks to see if the gameobject is null, and if it is then the game doesn't end
         if(myCube == null)
         {
             EndGame(false);
         }
         else
         {
+            //once we add the color to the white cube we destroy the next cube and it becomes null in the 
+            //nextcube area
             myCube.GetComponent<Renderer>().material.color = color;
             Destroy(nextCube);
             nextCube = null;
@@ -171,14 +180,18 @@ public class GameController : MonoBehaviour
 
     void SetNextCube(int y)
     {
-        //where to put it and tell it what row to look in
+        //where to put it and tell it what row to look in, by calling upon that Locate method
         GameObject whiteCube = LocateAvailableCube(y);
 
+        //call on the setcube method when we are setting up the nextcube color,
+        //while finding an available white cube
         SetCubeColor(whiteCube, nextCube.GetComponent<Renderer>().material.color);
     }
     
     void AddBlackCube()
     {
+        //we make the available white cube black here
+        //we call this method in the update
         GameObject whiteCube = LocateAvailableCube();
         
         // a color value that is beyond the max
@@ -258,7 +271,7 @@ public class GameController : MonoBehaviour
             int xDist = clickedCube.GetComponent<CubeController>().myX - activeCube.GetComponent<CubeController>().myX;
             int yDist = clickedCube.GetComponent<CubeController>().myY - activeCube.GetComponent<CubeController>().myY;
 
-            // within one including diagnols
+            // within one including diagonals
             if(Mathf.Abs(yDist)<= 1 && Mathf.Abs(xDist) <= 1)
             {
                 // here we set the clicked cube to be active
@@ -271,7 +284,7 @@ public class GameController : MonoBehaviour
                 activeCube.transform.localScale /= 1.5f;
                 activeCube.GetComponent<CubeController>().active = false;
                 
-                // we are keeing track of the new active cube
+                // we are keeping track of the new active cube
                 activeCube = clickedCube;
 
             }
@@ -314,6 +327,8 @@ public class GameController : MonoBehaviour
     }
     bool IsSameColorPlus(int x, int y)
     {
+        //we are chechking to see if the same colors are the same while checking to see if 
+        //there are no black or white cubes
         if (grid[x,y].GetComponent<Renderer>().material.color != Color.white &&
             grid[x,y].GetComponent<Renderer>().material.color != Color.black &&
             grid[x, y].GetComponent<Renderer>().material.color == grid[x + 1, y].GetComponent<Renderer>().material.color &&
